@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invoice Generator</title>
+  <link rel="stylesheet" href="style.css">
+
+  <!-- PDF Libraries -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+  <!-- Barcode Scanner -->
+  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+</head>
+<body>
+  <div class="container">
+    <h2><i>🧾</i> Invoice Generator</h2>
+
+    <!-- Client Details -->
+    <label for="clientName">Client Name</label>
+    <input type="text" id="clientName" placeholder="Enter client name">
+
+    <label for="currency">Currency</label>
+    <select id="currency" onchange="updateInvoice()">
+      <option value="$">$ - Dollar</option>
+      <option value="₹">₹ - Rupee</option>
+      <option value="€">€ - Euro</option>
+      <option value="£">£ - Pound</option>
+    </select>
+
+    <label for="taxRate">Tax Rate (%)</label>
+    <input type="number" id="taxRate" value="0" oninput="updateInvoice()">
+
+    <!-- Invoice Table -->
+    <table id="invoiceTable">
+      <thead>
+        <tr>
+          <th>Item</th>
+          <th>Qty</th>
+          <th>Price</th>
+          <th>Total</th>
+          <th>Action</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+
+    <!-- Add Item -->
+    <button class="btn" onclick="addRow()">+ Add Item</button>
+
+    <!-- Scanner Box -->
+    <div id="scanner" style="display:none; margin-top:15px; text-align:center;">
+      <div id="reader" style="width:100%; max-width:350px; margin:auto;"></div>
+      <button class="btn" onclick="stopScanner()">✖ Stop Scanner</button>
+    </div>
+
+    <!-- Totals -->
+    <h3 id="subtotal">Subtotal: $0.00</h3>
+    <h3 id="taxAmount">Tax: $0.00</h3>
+    <h3 id="total">Grand Total: $0.00</h3>
+
+    <!-- PDF Button -->
+    <button class="btn" onclick="prepareAndGeneratePDF()">📄 Generate PDF</button>
+  </div>
+
+  <!-- Main Logic -->
+  <script src="script.js"></script>
+  <script src="pdfGenerator.js"></script>
+
+  <!-- PDF Helper -->
+  <script>
+    function prepareAndGeneratePDF() {
+      let table = document.getElementById("invoiceTable").getElementsByTagName('tbody')[0];
+      let rows = table.getElementsByTagName('tr');
+      let items = [];
+
+      for (let row of rows) {
+        let desc = row.cells[0].getElementsByTagName("input")[0].value;
+        let qty = parseFloat(row.cells[1].getElementsByTagName("input")[0].value) || 0;
+        let price = parseFloat(row.cells[2].getElementsByTagName("input")[0].value) || 0;
+        items.push({ desc, qty, price });
+      }
+
+      let invoiceData = {
+        clientName: document.getElementById("clientName").value,
+        currency: document.getElementById("currency").value,
+        taxRate: parseFloat(document.getElementById("taxRate").value),
+        items: items,
+        invoiceNumber: Date.now().toString().slice(-5),
+        date: new Date().toLocaleDateString(),
+        dueDate: "—"
+      };
+
+      generatePDF(invoiceData);
+    }
+  </script>
+</body>
+</html>
